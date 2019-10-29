@@ -1,85 +1,37 @@
 #imports
-import sys
-import random
-import datetime
-import urllib.request
-from PIL import Image
 import tweepy
+import garf
+from time import sleep
 
-#When is now?
-now = datetime.datetime.now()
+#Get API keys from keys.txt in root
+keys = open('keys.txt', 'r')
+consumer_key = keys.readline().rstrip()
+consumer_secret = keys.readline().rstrip()
+access_token = keys.readline().rstrip()
+access_token_secret = keys.readline().rstrip()
+keys.close()
 
-#Make a whole bunch of arrays
-img = [None] * 3
-panel = [None] * 3
-url = [None] * 3
-weekday = [None] * 3
-w = [None] * 3
-h = [None] * 3
+#API object
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
 
-with open("keys.txt", "r") as file:
-    keys=file.readline()
+#Tweet loop
+while True:
+    #How many tweets have been
+    with open('tweet_counter.txt', 'r') as f:
+        data = f.read()
+        count = int(data)
 
-#Image loading validation loop
-for i in range(0, 3):
-    error = True
-    while error:
-        try:
-            #Define current year
-            year = random.randint(1978, now.year)
-            month = random.randint(1, now.month)
-            day = random.randint(1, now.day)
+    #Generate random garf
+    garf.generate_comic()
+    #Send random garf
+    api.update_with_media('comic.jpg', "Randomized Garfield comic #"+str(count))
 
-            #Format month
-            if month < 10:
-                month_string = "0" + str(month)
-            else:
-                month_string = str(month)
+    #Increase amount of tweets in text file
+    count += 1
+    with open('tweet_counter.txt', 'w') as f:
+        f.write(str(count))
 
-            #Format day
-            if day < 10:
-                day_string = "0" + str(day)
-            else:
-                day_string = str(day)
-
-            #Create URL
-            url[i] = "https://d1ejxu6vysztl5.cloudfront.net/comics/garfield/"+str(year)+"/"+str(year)+"-"+month_string+"-"+day_string+".gif"
-
-            #Load image from URL
-            img[i] = Image.open(urllib.request.urlopen(url[i]))
-            #Comic date
-            weekday[i] = datetime.datetime(year, month, day).weekday()
-            #Exit loop if not sunday
-            if (weekday[i] != 6):
-                error = False
-        except:
-            print(str("Error when attempting to load image from url "+url))
-
-#Crop image to single panel each
-for i in range(0, 3):
-    w[i], h[i] = img[i].size
-    panel[i] = img[i].crop(((w[i]/3)*i, 0, (w[i]/3)*i+(w[i]/3), h[i]))
-
-#Save images
-for i in range(0, 3):
-    print(url[i])
-    print(weekday[i])
-    img[i].save('garf'+str(i)+'.gif')
-    panel[i].save('panel'+str(i)+'.gif')
-
-
-print(keys)
-
-#Generate final image
-#https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python
-widths, heights = zip(*(i.size for i in panel))
-total_width = sum(widths)
-max_height = max(heights)
-
-comic = Image.new('RGB', (total_width, max_height), (255,255,255))
-x_off = 0
-for im in panel:
-  comic.paste(im, (x_off,0))
-  x_off += im.size[0]
-
-comic.save('comic.jpg')
+    #Wait before tweeting again (900 seconds == 15 minutes, 1800 seconds == 30 minutes)
+    sleep(1800)
