@@ -26,7 +26,15 @@ while True:
     #Generate random garf
     garf.generate_comic()
     #Send random garf
-    api.update_with_media('comic.jpg', "Randomized Garfield comic #"+str(count))
+    tweet = api.update_with_media('comic.jpg', "Randomized Garfield comic #"+str(count))
+    print("Successfully sent tweet with id "+str(tweet.id))
+
+    #Reply with sources
+    msg = ''
+    for url in garf.url:
+        msg += url + '\n'
+    reply = api.update_status('Sources:\n'+msg, tweet.id)
+    print("Successfully sent reply with id "+str(reply.id))
 
     #Increase amount of tweets in text file
     count += 1

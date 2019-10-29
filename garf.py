@@ -59,8 +59,8 @@ def generate_comic():
         panel[i] = img[i].crop(((w[i]/3)*i, 0, (w[i]/3)*i+(w[i]/3), h[i]))
 
     #Save images
-    for i in range(0, 3):
-        print(url[i])
+    #for i in range(0, 3):
+        #print(url[i])
         #img[i].save('garf'+str(i)+'.gif')
         #panel[i].save('panel'+str(i)+'.gif')
 
