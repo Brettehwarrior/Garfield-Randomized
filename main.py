@@ -23,23 +23,26 @@ while True:
         data = f.read()
         count = int(data)
 
-    #Generate random garf
-    garf.generate_comic()
-    #Send random garf
-    tweet = api.update_with_media('comic.jpg', "Randomized Garfield comic #"+str(count))
-    print("Successfully sent tweet with id "+str(tweet.id))
+    try:
+        #Generate random garf
+        garf.generate_comic()
+        #Send random garf
+        tweet = api.update_with_media('comic.jpg', "Randomized Garfield comic #"+str(count))
+        print("Successfully sent tweet with id "+str(tweet.id))
 
-    #Reply with sources
-    msg = ''
-    for url in garf.url:
-        msg += url + '\n'
-    reply = api.update_status('Sources:\n'+msg, tweet.id)
-    print("Successfully sent reply with id "+str(reply.id))
+        #Reply with sources
+        msg = ''
+        for url in garf.url:
+            msg += url + '\n'
+        reply = api.update_status('Sources:\n'+msg, tweet.id)
+        print("Successfully sent reply with id "+str(reply.id))
 
-    #Increase amount of tweets in text file
-    count += 1
-    with open('tweet_counter.txt', 'w') as f:
-        f.write(str(count))
+        #Increase amount of tweets in text file
+        count += 1
+        with open('tweet_counter.txt', 'w') as f:
+            f.write(str(count))
 
-    #Wait before tweeting again (900 seconds == 15 minutes, 1800 seconds == 30 minutes)
-    sleep(1800)
+        #Wait before tweeting again (900 seconds == 15 minutes, 1800 seconds == 30 minutes, 2700 seconds == 45 minutes)
+        sleep(2700)
+    except:
+        print("Unknown error has occured when tweeting, trying again")
