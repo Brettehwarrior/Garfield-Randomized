@@ -1,48 +1,49 @@
-#imports
-import tweepy
 import garf
+import bot
+import schedule
+import spreadsheet
 from time import sleep
+from datetime import datetime
 
-#Get API keys from keys.txt in root
-keys = open('keys.txt', 'r')
-consumer_key = keys.readline().rstrip()
-consumer_secret = keys.readline().rstrip()
-access_token = keys.readline().rstrip()
-access_token_secret = keys.readline().rstrip()
-keys.close()
+def generate_and_tweet():
+    now = datetime.now()
+    category = spreadsheet.schedule_list[now.weekday()].get(f'{now.hour}:00') # String with template category on Schedule spreadsheet at current time
+    
+    templates = spreadsheet.get_templates_with_category(category) # Retreive possible templates of scheduled category
+    template = spreadsheet.choose_template(templates) # Select random template by weight
+    comic_to_tweet = garf.generate_comic(template) # Generate comic
+    comic_to_tweet.save('images/tweet.png')
+    
+    
+    template_text = f'using {garf.template_text[0]} template'
+    if garf.template_text[1]: # Append credit tag
+        template_text +=  f', inspired by @{garf.template_text[1]}'
+    
+    
+    sources_text = 'Sources:'
+    for s in garf.source_urls:
+        sources_text += '\n' + s
+    
+    print(bot.send_tweet(template_text, sources_text))
 
-#API object
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
+def reset_schedule():
+    """Clears schedule, reloads spreadsheet, and schedules next reset"""
+    schedule.clear()
+    spreadsheet.init()
+    
+    # Schedule tweets
+    schedule.every().hour.at(':00').do(generate_and_tweet)
+    # Schedule next reset
+    schedule.every().sunday.at('23:30').do(reset_schedule)
 
-#Tweet loop
-while True:
-    #How many tweets have been
-    with open('tweet_counter.txt', 'r') as f:
-        data = f.read()
-        count = int(data)
-
-    try:
-        #Generate random garf
-        garf.generate_comic()
-        #Send random garf
-        tweet = api.update_with_media('comic.jpg', "Randomized Garfield comic #"+str(count))
-        print("Successfully sent tweet with id "+str(tweet.id))
-
-        #Reply with sources
-        msg = ''
-        for url in garf.url:
-            msg += url + '\n'
-        reply = api.update_status('Sources:\n'+msg, tweet.id)
-        print("Successfully sent reply with id "+str(reply.id))
-
-        #Increase amount of tweets in text file
-        count += 1
-        with open('tweet_counter.txt', 'w') as f:
-            f.write(str(count))
-
-        #Wait before tweeting again (900 seconds == 15 minutes, 1800 seconds == 30 minutes, 2700 seconds == 45 minutes)
-        sleep(2700)
-    except:
-        print("Unknown error has occured when tweeting, trying again")
+if __name__ == '__main__':
+    # Schedule tweets
+    schedule.every().hour.at(':00').do(generate_and_tweet)
+    reset_schedule()
+    
+    # generate_and_tweet()
+    
+    while True:
+        schedule.run_pending()
+        sleep(30)
+        
