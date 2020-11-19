@@ -9,9 +9,10 @@ from PIL import Image
 from enum import Enum
 from statistics import median
 
+PANEL_SCALE = 4
 PANEL_AMOUNT = 3
-PANEL_PADDING_X = 5
-PANEL_PADDING_Y = 5
+PANEL_PADDING_X = 5 * PANEL_SCALE
+PANEL_PADDING_Y = 5 * PANEL_SCALE
 
 source_urls = []
 template_text = ['ERR', 'ERR']
@@ -27,6 +28,7 @@ def get_random_comic() -> Image:
     failed_attempts = 0
 
     while failed_attempts < max_failed_attempts:
+        url = '(NO URL)'
         try:
             # Establish target date
             year = random.randint(1978, now.year)
@@ -88,13 +90,13 @@ def construct_comic(panels: list) -> Image:
     """
     
     # Scale panels to consistent height
-    median_height = median([i.size[1] for i in panels])
+    median_height = max([i.size[1] for i in panels])
     
     for i, im in enumerate(panels):
         w, h = im.size
         ar = w / h
         
-        panels[i] = im.resize((int(median_height*ar), int(median_height)), Image.ANTIALIAS)
+        panels[i] = im.resize((int(median_height*ar*PANEL_SCALE), int(median_height*PANEL_SCALE)), Image.LANCZOS)
         
     # https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python
     widths, heights = zip(*(i.size for i in panels))
@@ -141,14 +143,12 @@ def generate_comic(template: dict) -> Image:
     
     for i, panel_str in enumerate(panel_layout):
         if panel_str[0] == 'S':
+            panel_index = 0
             source_index = len(sources) - 1
         else:
+            panel_index = (random.randint(0, 2)) if (panel_str[1]=='R') else (int(panel_str[1])-1)
             source_index = string.ascii_lowercase.index(panel_str[0].lower())
-        
-        panel_index = 0
-        if not (drive_source_id and i==len(panel_layout)-1):
-            panel_index = int(panel_str[1])-1 if not panel_str[1]=='R' else random.randint(0, 2)
-        
+
         panels.append(crop_to_panel(sources[source_index], source_panel_amount[source_index], panel_index))
 
 
@@ -158,9 +158,9 @@ def generate_comic(template: dict) -> Image:
 
 if __name__ == '__main__':
     c = generate_comic({
-        'Random Sources': 6,
+        'Random Sources': 3,
         'Drive Source ID': '1MMR99gM5xqcnhED-WjX3PXubjzlgcf0X',
         'Drive Source URL': 'hi',
-        'Panel Layout': 'AR BR CR DR ER FR S'
+        'Panel Layout': 'A3 B3 C3'
     })
     c.show()

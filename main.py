@@ -19,7 +19,6 @@ def generate_and_tweet():
     if garf.template_text[1]: # Append credit tag
         template_text +=  f', inspired by @{garf.template_text[1]}'
     
-    
     sources_text = 'Sources:'
     for s in garf.source_urls:
         sources_text += '\n' + s
@@ -30,11 +29,11 @@ def reset_schedule():
     """Clears schedule, reloads spreadsheet, and schedules next reset"""
     schedule.clear()
     spreadsheet.init()
-    
     # Schedule tweets
     schedule.every().hour.at(':00').do(generate_and_tweet)
     # Schedule next reset
     schedule.every().sunday.at('23:30').do(reset_schedule)
+    print('Reset successful')
 
 if __name__ == '__main__':
     # Schedule tweets

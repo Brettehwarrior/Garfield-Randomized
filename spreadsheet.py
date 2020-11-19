@@ -71,7 +71,8 @@ def reset_schedule():
     schedule.every().sunday.at('23:30').do(reset_schedule)
 
         
-# if __name__ == '__main__':
-#     template = choose_template(get_templates_with_category('Basic'))
-#     comic = garf.generate_comic(template)
-#     comic.show()
+if __name__ == '__main__':
+    init()
+    template = choose_template(get_templates_with_category('Cameo'))
+    comic = garf.generate_comic(template)
+    comic.show()
