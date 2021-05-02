@@ -158,9 +158,9 @@ def generate_comic(template: dict) -> Image:
 
 if __name__ == '__main__':
     c = generate_comic({
-        'Random Sources': 3,
+        'Random Sources': 6,
         'Drive Source ID': '1MMR99gM5xqcnhED-WjX3PXubjzlgcf0X',
         'Drive Source URL': 'hi',
-        'Panel Layout': 'A3 B3 C3'
+        'Panel Layout': 'AR BR CR DR ER FR'
     })
     c.show()
